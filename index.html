@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  >
+
+  <meta
+    name="theme-color"
+    content="#031017"
+  >
+
+  <title>Escáner QR — Consulta IAF</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+      color: #F2F8FA;
+      background: #031017;
+    }
+
+    .app {
+      width: min(620px, 100%);
+      overflow: hidden;
+      border: 1px solid rgba(0, 229, 255, .45);
+      border-radius: 12px;
+      background: #071820;
+      box-shadow: 0 20px 70px rgba(0, 0, 0, .55);
+    }
+
+    header {
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(0, 229, 255, .16);
+    }
+
+    h1 {
+      margin: 0;
+      color: #00E5FF;
+      font-size: 18px;
+    }
+
+    .sub {
+      margin-top: 4px;
+      color: #A6BBC1;
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .contenido {
+      padding: 14px;
+    }
+
+    #reader {
+      width: 100%;
+      min-height: 300px;
+      overflow: hidden;
+      border-radius: 9px;
+      background: #000000;
+    }
+
+    .estado {
+      min-height: 42px;
+      margin-top: 12px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: #D1E0E4;
+      background: rgba(0, 229, 255, .05);
+      border: 1px solid rgba(0, 229, 255, .14);
+      border-radius: 7px;
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .estado.ok {
+      color: #9AF2B5;
+      border-color: rgba(90, 220, 130, .35);
+    }
+
+    .estado.error {
+      color: #FFAAAA;
+      border-color: rgba(255, 90, 90, .35);
+    }
+
+    .acciones {
+      padding: 0 14px 14px;
+      display: flex;
+      gap: 8px;
+    }
+
+    button {
+      min-height: 46px;
+      flex: 1;
+      cursor: pointer;
+      border-radius: 7px;
+      font-size: 11px;
+      font-weight: 900;
+      touch-action: manipulation;
+    }
+
+    #btnIniciar {
+      color: #001216;
+      background: #00D7EC;
+      border: 1px solid #00E5FF;
+    }
+
+    #btnCerrar {
+      color: #BDEEF4;
+      background: transparent;
+      border: 1px solid rgba(0, 229, 255, .35);
+    }
+
+    .nota {
+      padding: 0 15px 15px;
+      color: #789198;
+      font-size: 9px;
+      line-height: 1.45;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 0;
+        align-items: stretch;
+      }
+
+      .app {
+        width: 100%;
+        min-height: 100vh;
+        border: 0;
+        border-radius: 0;
+      }
+
+      #reader {
+        min-height: 58vh;
+      }
+    }
+  </style>
+
+  <script
+    src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"
+  ></script>
+</head>
+
+<body>
+  <main class="app">
+
+    <header>
+      <h1>ESCANEAR QR DEL BIEN</h1>
+
+      <div class="sub">
+        Apunta la cámara trasera al código QR.
+        Al detectarlo, regresarás automáticamente
+        a la consulta del inventario.
+      </div>
+    </header>
+
+    <div class="contenido">
+      <div id="reader"></div>
+
+      <div
+        id="estado"
+        class="estado"
+      >
+        Preparando cámara…
+      </div>
+    </div>
+
+    <div class="acciones">
+      <button
+        id="btnIniciar"
+        type="button"
+      >
+        ACTIVAR CÁMARA
+      </button>
+
+      <button
+        id="btnCerrar"
+        type="button"
+      >
+        REGRESAR
+      </button>
+    </div>
+
+    <div class="nota">
+      Este lector no consulta IAF_BASE ni almacena datos personales.
+      Únicamente lee el QR y devuelve el número de inventario
+      a la aplicación de consulta.
+    </div>
+
+  </main>
+
+  <script>
+    let ESCANER = null;
+    let INICIADO = false;
+    let FINALIZANDO = false;
+
+    const PARAMS =
+      new URLSearchParams(
+        window.location.search
+      );
+
+    const RETURN_URL =
+      String(
+        PARAMS.get('return') || ''
+      ).trim();
+
+
+    document.addEventListener(
+      'DOMContentLoaded',
+      function() {
+
+        document
+          .getElementById('btnIniciar')
+          .addEventListener(
+            'click',
+            iniciarCamara
+          );
+
+        document
+          .getElementById('btnCerrar')
+          .addEventListener(
+            'click',
+            regresarSinLectura
+          );
+
+        /*
+         * Se intenta iniciar automáticamente.
+         * Si el navegador exige una pulsación del usuario,
+         * queda disponible ACTIVAR CÁMARA.
+         */
+        setTimeout(
+          iniciarCamara,
+          250
+        );
+      }
+    );
+
+
+    async function iniciarCamara() {
+      if (
+        INICIADO ||
+        FINALIZANDO
+      ) {
+        return;
+      }
+
+      if (
+        typeof Html5Qrcode ===
+        'undefined'
+      ) {
+        mostrarEstado(
+          'No se pudo cargar el lector QR. Verifica la conexión a Internet.',
+          'error'
+        );
+
+        return;
+      }
+
+      if (
+        !returnUrlValida(
+          RETURN_URL
+        )
+      ) {
+        mostrarEstado(
+          'El lector no recibió una dirección válida para regresar a la aplicación.',
+          'error'
+        );
+
+        return;
+      }
+
+      INICIADO = true;
+
+      mostrarEstado(
+        'Solicitando permiso para utilizar la cámara…'
+      );
+
+      try {
+        ESCANER =
+          new Html5Qrcode(
+            'reader'
+          );
+
+        await ESCANER.start(
+          {
+            facingMode:
+              'environment'
+          },
+          {
+            fps: 10,
+
+            qrbox:
+              function(
+                ancho,
+                alto
+              ) {
+                const lado =
+                  Math.floor(
+                    Math.min(
+                      ancho,
+                      alto
+                    ) * .72
+                  );
+
+                return {
+                  width: lado,
+                  height: lado
+                };
+              },
+
+            aspectRatio:
+              1.333333
+          },
+
+          codigoDetectado,
+
+          function() {
+            // Los cuadros sin QR son normales.
+          }
+        );
+
+        mostrarEstado(
+          'Cámara activa. Apunta al QR del bien.'
+        );
+
+      } catch (error) {
+        INICIADO = false;
+
+        let mensaje =
+          'No fue posible iniciar la cámara.';
+
+        const textoError =
+          String(
+            error && error.message
+              ? error.message
+              : error || ''
+          ).toLowerCase();
+
+        if (
+          textoError.includes('permission') ||
+          textoError.includes('notallowed')
+        ) {
+          mensaje =
+            'No se concedió permiso de cámara. ' +
+            'Pulsa ACTIVAR CÁMARA y autoriza el acceso cuando el navegador lo solicite.';
+        }
+
+        mostrarEstado(
+          mensaje,
+          'error'
+        );
+      }
+    }
+
+
+    async function codigoDetectado(texto) {
+      if (FINALIZANDO) {
+        return;
+      }
+
+      const inventario =
+        normalizarValorQr(
+          texto
+        );
+
+      if (!inventario) {
+        return;
+      }
+
+      FINALIZANDO = true;
+
+      mostrarEstado(
+        'QR detectado: ' +
+        inventario,
+        'ok'
+      );
+
+      await detenerCamara();
+
+      regresarConInventario(
+        inventario
+      );
+    }
+
+
+    function normalizarValorQr(texto) {
+      const valor =
+        String(
+          texto || ''
+        ).trim();
+
+      if (!valor) {
+        return '';
+      }
+
+      /*
+       * Si algún QR contiene una URL con ?inventario=,
+       * extrae el número. Si contiene solo el número,
+       * se usa directamente.
+       */
+      try {
+        const url =
+          new URL(
+            valor
+          );
+
+        const numero =
+          url.searchParams.get(
+            'inventario'
+          );
+
+        if (numero) {
+          return String(
+            numero
+          ).trim();
+        }
+
+      } catch (error) {
+        // El QR contiene texto simple.
+      }
+
+      return valor;
+    }
+
+
+    function regresarConInventario(inventario) {
+      if (
+        !returnUrlValida(
+          RETURN_URL
+        )
+      ) {
+        mostrarEstado(
+          'QR leído, pero no fue posible regresar a la aplicación.',
+          'error'
+        );
+
+        return;
+      }
+
+      try {
+        const url =
+          new URL(
+            RETURN_URL
+          );
+
+        url.searchParams.set(
+          'inventario',
+          inventario
+        );
+
+        window.location.replace(
+          url.toString()
+        );
+
+      } catch (error) {
+        mostrarEstado(
+          'Se leyó el QR, pero ocurrió un error al regresar a la consulta.',
+          'error'
+        );
+      }
+    }
+
+
+    async function regresarSinLectura() {
+      FINALIZANDO = true;
+
+      await detenerCamara();
+
+      if (
+        returnUrlValida(
+          RETURN_URL
+        )
+      ) {
+        window.location.replace(
+          RETURN_URL
+        );
+
+        return;
+      }
+
+      history.back();
+    }
+
+
+    function returnUrlValida(valor) {
+      try {
+        const url =
+          new URL(
+            valor
+          );
+
+        return (
+          url.protocol === 'https:' &&
+          (
+            url.hostname ===
+              'script.google.com' ||
+            url.hostname.endsWith(
+              '.script.google.com'
+            )
+          )
+        );
+
+      } catch (error) {
+        return false;
+      }
+    }
+
+
+    async function detenerCamara() {
+      try {
+        if (
+          ESCANER &&
+          ESCANER.isScanning
+        ) {
+          await ESCANER.stop();
+        }
+      } catch (error) {
+        // No crítico.
+      }
+
+      try {
+        if (ESCANER) {
+          await ESCANER.clear();
+        }
+      } catch (error) {
+        // No crítico.
+      }
+
+      INICIADO = false;
+      ESCANER = null;
+    }
+
+
+    function mostrarEstado(
+      mensaje,
+      tipo
+    ) {
+      const elemento =
+        document.getElementById(
+          'estado'
+        );
+
+      elemento.className =
+        'estado' +
+        (
+          tipo
+            ? ' ' + tipo
+            : ''
+        );
+
+      elemento.textContent =
+        mensaje || '';
+    }
+  </script>
+</body>
+</html>
