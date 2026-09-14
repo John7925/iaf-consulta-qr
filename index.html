@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- iaf-consulta-qr v0.3 — Cámara + imagen + compatibilidad HEIC/HEIF móvil -->
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -450,6 +451,10 @@
   <script
     src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"
   ></script>
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"
+  ></script>
 </head>
 
 <body>
@@ -544,7 +549,7 @@
           <p>
             La fotografía se analiza en este dispositivo.
             No se envía a la base de inventario.
-            Puede estar girada, inclinada o contener reflejos moderados.
+            Puede estar girada, inclinada o contener reflejos moderados. También admite fotografías HEIC/HEIF del teléfono.
           </p>
 
           <div
@@ -576,7 +581,7 @@
       <input
         id="archivoQr"
         type="file"
-        accept="image/*"
+        accept="image/*,.heic,.heif"
       >
 
       <div
@@ -1201,13 +1206,9 @@
 
 
       if (
-        !String(
-          archivo.type || ''
+        !esArchivoImagenCompatible(
+          archivo
         )
-          .toLowerCase()
-          .startsWith(
-            'image/'
-          )
       ) {
 
         mostrarEstado(
@@ -1253,9 +1254,15 @@
 
       try {
 
+        const archivoProcesable =
+          await prepararArchivoImagenParaQr(
+            archivo
+          );
+
+
         let texto =
           await decodificarImagenQrRobusta(
-            archivo
+            archivoProcesable
           );
 
 
@@ -1304,6 +1311,212 @@
           evento.target.value =
             '';
         }
+      }
+    }
+
+
+    // ======================================================
+    // NORMALIZACIÓN DE ARCHIVOS DE IMAGEN
+    //
+    // En varios teléfonos Android/iPhone la galería entrega
+    // fotografías como HEIC/HEIF. Ese formato puede abrirse
+    // visualmente en el teléfono, pero no siempre puede ser
+    // procesado por canvas, createImageBitmap, jsQR o ZXing.
+    //
+    // Cuando detectamos HEIC/HEIF lo convertimos localmente
+    // a JPEG antes de intentar leer el QR.
+    // ======================================================
+
+    function esArchivoImagenCompatible(
+      archivo
+    ) {
+
+      if (!archivo) {
+        return false;
+      }
+
+
+      const tipo =
+        String(
+          archivo.type || ''
+        )
+          .trim()
+          .toLowerCase();
+
+
+      const nombre =
+        String(
+          archivo.name || ''
+        )
+          .trim()
+          .toLowerCase();
+
+
+      return (
+        tipo.startsWith(
+          'image/'
+        ) ||
+        /\.(png|jpe?g|webp|gif|bmp|heic|heif)$/i.test(
+          nombre
+        )
+      );
+    }
+
+
+    function esArchivoHeic(
+      archivo
+    ) {
+
+      if (!archivo) {
+        return false;
+      }
+
+
+      const tipo =
+        String(
+          archivo.type || ''
+        )
+          .trim()
+          .toLowerCase();
+
+
+      const nombre =
+        String(
+          archivo.name || ''
+        )
+          .trim()
+          .toLowerCase();
+
+
+      return (
+        tipo === 'image/heic' ||
+        tipo === 'image/heif' ||
+        tipo === 'image/heic-sequence' ||
+        tipo === 'image/heif-sequence' ||
+        /\.heic$/i.test(
+          nombre
+        ) ||
+        /\.heif$/i.test(
+          nombre
+        )
+      );
+    }
+
+
+    async function prepararArchivoImagenParaQr(
+      archivo
+    ) {
+
+      if (
+        !esArchivoHeic(
+          archivo
+        )
+      ) {
+
+        return archivo;
+      }
+
+
+      mostrarEstado(
+        'La fotografía está en formato HEIC. Convirtiendo localmente a JPEG para poder analizar el QR…',
+        'pendiente'
+      );
+
+
+      if (
+        typeof window.heic2any !==
+          'function' &&
+        typeof heic2any !==
+          'function'
+      ) {
+
+        throw new Error(
+          'No se pudo cargar el convertidor HEIC.'
+        );
+      }
+
+
+      const convertir =
+        typeof window.heic2any ===
+          'function'
+          ? window.heic2any
+          : heic2any;
+
+
+      let convertido =
+        await convertir({
+          blob:
+            archivo,
+
+          toType:
+            'image/jpeg',
+
+          quality:
+            0.95
+        });
+
+
+      if (
+        Array.isArray(
+          convertido
+        )
+      ) {
+
+        convertido =
+          convertido[0];
+      }
+
+
+      if (
+        !convertido
+      ) {
+
+        throw new Error(
+          'No fue posible convertir la fotografía HEIC.'
+        );
+      }
+
+
+      const nombreOriginal =
+        String(
+          archivo.name ||
+          'imagen.heic'
+        );
+
+
+      const nombreJpeg =
+        nombreOriginal
+          .replace(
+            /\.(heic|heif)$/i,
+            ''
+          ) +
+        '.jpg';
+
+
+      try {
+
+        return new File(
+          [
+            convertido
+          ],
+          nombreJpeg,
+          {
+            type:
+              'image/jpeg',
+
+            lastModified:
+              archivo.lastModified ||
+              Date.now()
+          }
+        );
+
+      }
+      catch (error) {
+
+        convertido.name =
+          nombreJpeg;
+
+        return convertido;
       }
     }
 
