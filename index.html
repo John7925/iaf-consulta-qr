@@ -10,181 +10,480 @@
 
   <meta
     name="theme-color"
-    content="#031017"
+    content="#315F64"
   >
 
-  <title>Escáner QR — Consulta IAF</title>
+  <title>Escáner QR — Inventario de Activo Fijo</title>
 
   <style>
     :root {
-      color-scheme: dark;
-      font-family: Arial, Helvetica, sans-serif;
+      --fondo:#EEF2F3;
+      --superficie:#FFFFFF;
+      --superficie-suave:#F6F8F8;
+      --texto:#26383E;
+      --texto-suave:#687B82;
+      --borde:#C9D4D7;
+      --primario:#315F64;
+      --primario-oscuro:#254B50;
+      --exito:#326B48;
+      --error:#963F43;
+      --aviso:#806520;
+      --sombra:0 18px 50px rgba(38,56,62,.16);
+
+      font-family:
+        "Segoe UI",
+        Arial,
+        Helvetica,
+        sans-serif;
+
+      color-scheme:light;
     }
+
 
     * {
-      box-sizing: border-box;
+      box-sizing:border-box;
     }
+
+
+    html,
+    body {
+      margin:0;
+      width:100%;
+      min-height:100%;
+    }
+
 
     body {
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 14px;
-      color: #F2F8FA;
-      background: #031017;
+      min-height:100vh;
+
+      display:flex;
+      align-items:center;
+      justify-content:center;
+
+      padding:18px;
+
+      color:var(--texto);
+      background:var(--fondo);
     }
 
-    .app {
-      width: min(620px, 100%);
-      overflow: hidden;
-      border: 1px solid rgba(0, 229, 255, .45);
-      border-radius: 12px;
-      background: #071820;
-      box-shadow: 0 20px 70px rgba(0, 0, 0, .55);
-    }
-
-    header {
-      padding: 14px 16px;
-      border-bottom: 1px solid rgba(0, 229, 255, .16);
-    }
-
-    h1 {
-      margin: 0;
-      color: #00E5FF;
-      font-size: 18px;
-    }
-
-    .sub {
-      margin-top: 4px;
-      color: #A6BBC1;
-      font-size: 11px;
-      line-height: 1.4;
-    }
-
-    .contenido {
-      padding: 14px;
-    }
-
-    #reader {
-      width: 100%;
-      min-height: 300px;
-      overflow: hidden;
-      border-radius: 9px;
-      background: #000000;
-    }
-
-    .estado {
-      min-height: 42px;
-      margin-top: 12px;
-      padding: 10px 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      color: #D1E0E4;
-      background: rgba(0, 229, 255, .05);
-      border: 1px solid rgba(0, 229, 255, .14);
-      border-radius: 7px;
-      font-size: 11px;
-      line-height: 1.45;
-    }
-
-    .estado.ok {
-      color: #9AF2B5;
-      border-color: rgba(90, 220, 130, .35);
-    }
-
-    .estado.error {
-      color: #FFAAAA;
-      border-color: rgba(255, 90, 90, .35);
-    }
-
-    .acciones {
-      padding: 0 14px 14px;
-      display: flex;
-      gap: 8px;
-    }
 
     button {
-      min-height: 46px;
-      flex: 1;
-      cursor: pointer;
-      border-radius: 7px;
-      font-size: 11px;
-      font-weight: 900;
-      touch-action: manipulation;
+      font:inherit;
+      -webkit-tap-highlight-color:transparent;
     }
+
+
+    .app {
+      width:min(640px,100%);
+
+      overflow:hidden;
+
+      background:var(--superficie);
+
+      border:
+        1px solid
+        var(--borde);
+
+      border-radius:16px;
+
+      box-shadow:
+        var(--sombra);
+    }
+
+
+    .cabecera {
+      padding:17px 18px;
+
+      display:flex;
+      align-items:center;
+
+      gap:13px;
+
+      background:
+        var(--superficie);
+
+      border-bottom:
+        1px solid
+        var(--borde);
+    }
+
+
+    .marca {
+      width:45px;
+      height:45px;
+
+      flex:
+        0 0 45px;
+
+      display:grid;
+      place-items:center;
+
+      color:#FFFFFF;
+
+      background:
+        var(--primario);
+
+      border-radius:10px;
+
+      font-size:12px;
+      font-weight:900;
+
+      letter-spacing:.5px;
+    }
+
+
+    .cabecera-texto {
+      min-width:0;
+    }
+
+
+    h1 {
+      margin:0;
+
+      color:
+        var(--texto);
+
+      font-size:18px;
+
+      line-height:1.2;
+
+      font-weight:850;
+    }
+
+
+    .sub {
+      margin-top:4px;
+
+      color:
+        var(--texto-suave);
+
+      font-size:11px;
+
+      line-height:1.45;
+    }
+
+
+    .contenido {
+      padding:16px;
+    }
+
+
+    .lector-contenedor {
+      position:relative;
+
+      width:100%;
+
+      min-height:320px;
+
+      overflow:hidden;
+
+      background:#111;
+
+      border:
+        1px solid
+        #AEBFC3;
+
+      border-radius:12px;
+    }
+
+
+    #reader {
+      width:100%;
+      min-height:320px;
+    }
+
+
+    .estado {
+      min-height:48px;
+
+      margin-top:13px;
+
+      padding:
+        10px 13px;
+
+      display:flex;
+      align-items:center;
+      justify-content:center;
+
+      text-align:center;
+
+      color:
+        var(--texto-suave);
+
+      background:
+        var(--superficie-suave);
+
+      border:
+        1px solid
+        var(--borde);
+
+      border-radius:9px;
+
+      font-size:11px;
+      font-weight:700;
+
+      line-height:1.45;
+    }
+
+
+    .estado.ok {
+      color:
+        var(--exito);
+
+      background:
+        #F0F7F2;
+
+      border-color:
+        #A9C9B5;
+    }
+
+
+    .estado.error {
+      color:
+        var(--error);
+
+      background:
+        #FBF2F3;
+
+      border-color:
+        #D8B3B7;
+    }
+
+
+    .estado.pendiente {
+      color:
+        var(--aviso);
+
+      background:
+        #FFF9EC;
+
+      border-color:
+        #DCC999;
+    }
+
+
+    .acciones {
+      padding:
+        0 16px 16px;
+
+      display:grid;
+
+      grid-template-columns:
+        1fr 1fr;
+
+      gap:9px;
+    }
+
+
+    button {
+      min-height:47px;
+
+      padding:
+        9px 14px;
+
+      cursor:pointer;
+
+      border-radius:8px;
+
+      font-size:10px;
+      font-weight:900;
+
+      letter-spacing:.2px;
+
+      touch-action:manipulation;
+    }
+
+
+    button:disabled {
+      cursor:not-allowed;
+      opacity:.55;
+    }
+
 
     #btnIniciar {
-      color: #001216;
-      background: #00D7EC;
-      border: 1px solid #00E5FF;
+      color:#FFFFFF;
+
+      background:
+        var(--primario);
+
+      border:
+        1px solid
+        var(--primario);
     }
+
+
+    #btnIniciar:hover:not(:disabled) {
+      background:
+        var(--primario-oscuro);
+
+      border-color:
+        var(--primario-oscuro);
+    }
+
 
     #btnCerrar {
-      color: #BDEEF4;
-      background: transparent;
-      border: 1px solid rgba(0, 229, 255, .35);
+      color:
+        var(--primario);
+
+      background:#FFFFFF;
+
+      border:
+        1px solid
+        #9FB3B8;
     }
+
 
     .nota {
-      padding: 0 15px 15px;
-      color: #789198;
-      font-size: 9px;
-      line-height: 1.45;
+      padding:
+        0 17px 17px;
+
+      color:
+        #75878D;
+
+      font-size:9px;
+
+      line-height:1.5;
+
+      text-align:center;
     }
 
-    @media (max-width: 600px) {
+
+    .oculto {
+      display:none!important;
+    }
+
+
+    @media(max-width:600px) {
+
       body {
-        padding: 0;
-        align-items: stretch;
+        padding:0;
+        align-items:stretch;
       }
+
 
       .app {
-        width: 100%;
-        min-height: 100vh;
-        border: 0;
-        border-radius: 0;
+        width:100%;
+        min-height:100vh;
+
+        border:0;
+        border-radius:0;
+
+        box-shadow:none;
       }
 
-      #reader {
-        min-height: 58vh;
+
+      .cabecera {
+        padding:
+          max(
+            13px,
+            env(safe-area-inset-top)
+          )
+          14px
+          13px;
       }
+
+
+      h1 {
+        font-size:16px;
+      }
+
+
+      .contenido {
+        padding:12px;
+      }
+
+
+      .lector-contenedor,
+      #reader {
+        min-height:58vh;
+      }
+
+
+      .acciones {
+        padding:
+          0 12px
+          max(
+            12px,
+            env(safe-area-inset-bottom)
+          );
+
+        grid-template-columns:1fr;
+      }
+
+
+      button {
+        min-height:52px;
+        font-size:11px;
+      }
+
+
+      .nota {
+        padding:
+          0 14px 16px;
+      }
+
     }
   </style>
+
 
   <script
     src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"
   ></script>
 </head>
 
+
 <body>
+
   <main class="app">
 
-    <header>
-      <h1>ESCANEAR QR DEL BIEN</h1>
+    <header class="cabecera">
 
-      <div class="sub">
-        Apunta la cámara trasera al código QR.
-        Al detectarlo, regresarás automáticamente
-        a la consulta del inventario.
+      <div
+        class="marca"
+        aria-hidden="true"
+      >
+        AF
       </div>
+
+
+      <div class="cabecera-texto">
+
+        <h1>
+          ESCANEAR QR DEL BIEN
+        </h1>
+
+        <div class="sub">
+          Apunta la cámara trasera al código QR.
+          Al detectarlo regresarás automáticamente
+          a la aplicación.
+        </div>
+
+      </div>
+
     </header>
 
+
     <div class="contenido">
-      <div id="reader"></div>
+
+      <div class="lector-contenedor">
+
+        <div id="reader"></div>
+
+      </div>
+
 
       <div
         id="estado"
-        class="estado"
+        class="estado pendiente"
       >
-        Preparando cámara…
+        Preparando lector QR…
       </div>
+
     </div>
 
+
     <div class="acciones">
+
       <button
         id="btnIniciar"
         type="button"
@@ -192,262 +491,657 @@
         ACTIVAR CÁMARA
       </button>
 
+
       <button
         id="btnCerrar"
         type="button"
       >
         REGRESAR
       </button>
+
     </div>
 
+
     <div class="nota">
-      Este lector no consulta IAF_BASE ni almacena datos personales.
-      Únicamente lee el QR y devuelve el número de inventario
-      a la aplicación de consulta.
+      Este lector no consulta ni modifica la base de datos.
+      Únicamente lee el código QR y devuelve el número
+      de inventario a la aplicación que lo abrió.
     </div>
 
   </main>
 
+
   <script>
+    'use strict';
+
+
+    // ======================================================
+    // ESTADO DEL LECTOR
+    // ======================================================
+
     let ESCANER = null;
+
     let INICIADO = false;
+
     let FINALIZANDO = false;
+
+
+    // ======================================================
+    // PARÁMETROS DE ENTRADA
+    //
+    // MODO ACTUAL:
+    //
+    // ?nonce=XXXXX&origen=INVENTARIO_AF
+    //
+    // Devuelve:
+    //
+    // window.opener.postMessage({
+    //   tipo: 'INVENTARIO_AF_QR',
+    //   nonce: XXXXX,
+    //   valor: INVENTARIO
+    // })
+    //
+    //
+    // COMPATIBILIDAD ANTERIOR:
+    //
+    // ?return=https://script.google.com/...
+    //
+    // Devuelve mediante redirección:
+    //
+    // ?inventario=XXXXX
+    // ======================================================
 
     const PARAMS =
       new URLSearchParams(
         window.location.search
       );
 
+
+    const NONCE =
+      String(
+        PARAMS.get(
+          'nonce'
+        ) || ''
+      )
+        .trim();
+
+
+    const ORIGEN_SOLICITANTE =
+      String(
+        PARAMS.get(
+          'origen'
+        ) || ''
+      )
+        .trim();
+
+
     const RETURN_URL =
       String(
-        PARAMS.get('return') || ''
-      ).trim();
+        PARAMS.get(
+          'return'
+        ) || ''
+      )
+        .trim();
 
+
+    // ======================================================
+    // INICIO
+    // ======================================================
 
     document.addEventListener(
       'DOMContentLoaded',
       function() {
 
         document
-          .getElementById('btnIniciar')
+          .getElementById(
+            'btnIniciar'
+          )
           .addEventListener(
             'click',
             iniciarCamara
           );
 
+
         document
-          .getElementById('btnCerrar')
+          .getElementById(
+            'btnCerrar'
+          )
           .addEventListener(
             'click',
             regresarSinLectura
           );
 
+
+        if (
+          !existeCanalRetorno()
+        ) {
+
+          mostrarEstado(
+            'Este lector debe abrirse desde Inventario de Activo Fijo o Consulta Rápida.',
+            'error'
+          );
+
+          return;
+        }
+
+
         /*
-         * Se intenta iniciar automáticamente.
-         * Si el navegador exige una pulsación del usuario,
-         * queda disponible ACTIVAR CÁMARA.
+         * Intentamos abrir automáticamente la cámara.
+         *
+         * Algunos navegadores permiten esta operación.
+         * Otros requieren una pulsación del usuario.
+         *
+         * En ese caso permanece disponible:
+         *
+         * ACTIVAR CÁMARA
          */
+
         setTimeout(
           iniciarCamara,
-          250
+          300
         );
+
       }
     );
 
 
+    // ======================================================
+    // COMPROBAR CANAL DE RETORNO
+    // ======================================================
+
+    function existeCanalRetorno() {
+
+      if (
+        NONCE &&
+        existeVentanaOrigen()
+      ) {
+
+        return true;
+      }
+
+
+      if (
+        returnUrlValida(
+          RETURN_URL
+        )
+      ) {
+
+        return true;
+      }
+
+
+      return false;
+    }
+
+
+    function existeVentanaOrigen() {
+
+      try {
+
+        return Boolean(
+          window.opener &&
+          !window.opener.closed
+        );
+
+      }
+      catch (error) {
+
+        return false;
+      }
+    }
+
+
+    // ======================================================
+    // INICIAR CÁMARA
+    // ======================================================
+
     async function iniciarCamara() {
+
       if (
         INICIADO ||
         FINALIZANDO
       ) {
+
         return;
       }
+
+
+      if (
+        !existeCanalRetorno()
+      ) {
+
+        mostrarEstado(
+          'No existe una aplicación válida a la cual regresar el resultado.',
+          'error'
+        );
+
+        return;
+      }
+
 
       if (
         typeof Html5Qrcode ===
         'undefined'
       ) {
+
         mostrarEstado(
-          'No se pudo cargar el lector QR. Verifica la conexión a Internet.',
+          'No fue posible cargar el lector QR. Verifica la conexión a Internet.',
           'error'
         );
 
         return;
       }
 
-      if (
-        !returnUrlValida(
-          RETURN_URL
-        )
-      ) {
-        mostrarEstado(
-          'El lector no recibió una dirección válida para regresar a la aplicación.',
-          'error'
-        );
 
-        return;
-      }
+      INICIADO =
+        true;
 
-      INICIADO = true;
 
-      mostrarEstado(
-        'Solicitando permiso para utilizar la cámara…'
+      bloquearBotonCamara(
+        true
       );
 
+
+      mostrarEstado(
+        'Solicitando permiso para utilizar la cámara…',
+        'pendiente'
+      );
+
+
       try {
+
         ESCANER =
           new Html5Qrcode(
             'reader'
           );
 
+
         await ESCANER.start(
+
           {
             facingMode:
               'environment'
           },
+
           {
-            fps: 10,
+
+            fps:
+              10,
+
 
             qrbox:
               function(
                 ancho,
                 alto
               ) {
+
                 const lado =
                   Math.floor(
                     Math.min(
                       ancho,
                       alto
-                    ) * .72
+                    ) *
+                    .72
                   );
 
+
                 return {
-                  width: lado,
-                  height: lado
+
+                  width:
+                    lado,
+
+                  height:
+                    lado
+
                 };
+
               },
+
 
             aspectRatio:
               1.333333
+
           },
+
 
           codigoDetectado,
 
+
           function() {
-            // Los cuadros sin QR son normales.
+
+            /*
+             * Es completamente normal recibir cuadros
+             * de cámara donde todavía no existe un QR.
+             */
+
           }
+
         );
+
 
         mostrarEstado(
-          'Cámara activa. Apunta al QR del bien.'
+          'Cámara activa. Apunta al código QR del bien.',
+          ''
         );
 
-      } catch (error) {
-        INICIADO = false;
+      }
+
+      catch (error) {
+
+        INICIADO =
+          false;
+
+
+        bloquearBotonCamara(
+          false
+        );
+
 
         let mensaje =
           'No fue posible iniciar la cámara.';
 
+
         const textoError =
           String(
-            error && error.message
+            error &&
+            error.message
               ? error.message
               : error || ''
-          ).toLowerCase();
+          )
+            .toLowerCase();
+
 
         if (
-          textoError.includes('permission') ||
-          textoError.includes('notallowed')
+          textoError.includes(
+            'permission'
+          ) ||
+          textoError.includes(
+            'notallowed'
+          ) ||
+          textoError.includes(
+            'denied'
+          )
         ) {
+
           mensaje =
-            'No se concedió permiso de cámara. ' +
+            'No se concedió permiso para utilizar la cámara. ' +
             'Pulsa ACTIVAR CÁMARA y autoriza el acceso cuando el navegador lo solicite.';
+
         }
+
+
+        if (
+          textoError.includes(
+            'notfound'
+          ) ||
+          textoError.includes(
+            'devicesnotfound'
+          )
+        ) {
+
+          mensaje =
+            'No se encontró una cámara disponible en este dispositivo.';
+
+        }
+
 
         mostrarEstado(
           mensaje,
           'error'
         );
+
       }
+
     }
 
 
-    async function codigoDetectado(texto) {
-      if (FINALIZANDO) {
+    // ======================================================
+    // QR DETECTADO
+    // ======================================================
+
+    async function codigoDetectado(
+      texto
+    ) {
+
+      if (
+        FINALIZANDO
+      ) {
+
         return;
       }
+
 
       const inventario =
         normalizarValorQr(
           texto
         );
 
+
       if (!inventario) {
+
         return;
       }
 
-      FINALIZANDO = true;
+
+      FINALIZANDO =
+        true;
+
+
+      bloquearBotonCamara(
+        true
+      );
+
 
       mostrarEstado(
         'QR detectado: ' +
-        inventario,
+        inventario +
+        '. Regresando a la aplicación…',
         'ok'
       );
 
+
       await detenerCamara();
 
-      regresarConInventario(
+
+      entregarInventario(
         inventario
       );
+
     }
 
 
-    function normalizarValorQr(texto) {
+    // ======================================================
+    // NORMALIZAR CONTENIDO DEL QR
+    //
+    // ACEPTA:
+    //
+    // 5111000012-891
+    //
+    // o una URL como:
+    //
+    // https://sitio/?inventario=5111000012-891
+    // ======================================================
+
+    function normalizarValorQr(
+      texto
+    ) {
+
       const valor =
         String(
           texto || ''
-        ).trim();
+        )
+          .trim();
+
 
       if (!valor) {
+
         return '';
+
       }
 
-      /*
-       * Si algún QR contiene una URL con ?inventario=,
-       * extrae el número. Si contiene solo el número,
-       * se usa directamente.
-       */
+
       try {
+
         const url =
           new URL(
             valor
           );
+
 
         const numero =
           url.searchParams.get(
             'inventario'
           );
 
-        if (numero) {
+
+        if (
+          numero
+        ) {
+
           return String(
             numero
-          ).trim();
+          )
+            .trim();
+
         }
 
-      } catch (error) {
-        // El QR contiene texto simple.
       }
 
+      catch (error) {
+
+        /*
+         * No es una URL.
+         * Probablemente el QR contiene directamente
+         * el número de inventario.
+         */
+
+      }
+
+
       return valor;
+
     }
 
 
-    function regresarConInventario(inventario) {
+    // ======================================================
+    // ENTREGAR RESULTADO
+    //
+    // PRIORIDAD:
+    //
+    // 1. postMessage + nonce
+    // 2. return URL heredada
+    // ======================================================
+
+    function entregarInventario(
+      inventario
+    ) {
+
+      if (
+        NONCE &&
+        existeVentanaOrigen()
+      ) {
+
+        try {
+
+          window.opener
+            .postMessage(
+              {
+
+                tipo:
+                  'INVENTARIO_AF_QR',
+
+                nonce:
+                  NONCE,
+
+                valor:
+                  inventario,
+
+                origen:
+                  ORIGEN_SOLICITANTE ||
+                  'INVENTARIO_AF'
+
+              },
+
+              '*'
+            );
+
+
+          /*
+           * Damos un pequeño margen para que el navegador
+           * entregue postMessage antes de cerrar la ventana.
+           */
+
+          setTimeout(
+            function() {
+
+              cerrarVentanaLector();
+
+            },
+            220
+          );
+
+
+          return;
+
+        }
+
+        catch (error) {
+
+          /*
+           * Si postMessage falla y existe RETURN_URL,
+           * utilizamos el método anterior como respaldo.
+           */
+
+        }
+
+      }
+
+
+      if (
+        returnUrlValida(
+          RETURN_URL
+        )
+      ) {
+
+        regresarConInventarioUrl(
+          inventario
+        );
+
+        return;
+      }
+
+
+      FINALIZANDO =
+        false;
+
+
+      bloquearBotonCamara(
+        false
+      );
+
+
+      mostrarEstado(
+        'El QR fue leído, pero no fue posible devolverlo a la aplicación.',
+        'error'
+      );
+
+    }
+
+
+    // ======================================================
+    // RETORNO HEREDADO POR URL
+    // ======================================================
+
+    function regresarConInventarioUrl(
+      inventario
+    ) {
+
       if (
         !returnUrlValida(
           RETURN_URL
         )
       ) {
+
         mostrarEstado(
           'QR leído, pero no fue posible regresar a la aplicación.',
           'error'
@@ -456,40 +1150,86 @@
         return;
       }
 
+
       try {
+
         const url =
           new URL(
             RETURN_URL
           );
+
 
         url.searchParams.set(
           'inventario',
           inventario
         );
 
+
         window.location.replace(
           url.toString()
         );
 
-      } catch (error) {
+      }
+
+      catch (error) {
+
+        FINALIZANDO =
+          false;
+
+
+        bloquearBotonCamara(
+          false
+        );
+
+
         mostrarEstado(
-          'Se leyó el QR, pero ocurrió un error al regresar a la consulta.',
+          'El QR fue leído, pero ocurrió un error al regresar a la aplicación.',
           'error'
         );
+
       }
+
     }
 
 
+    // ======================================================
+    // REGRESAR SIN LEER
+    // ======================================================
+
     async function regresarSinLectura() {
-      FINALIZANDO = true;
+
+      if (
+        FINALIZANDO
+      ) {
+
+        return;
+      }
+
+
+      FINALIZANDO =
+        true;
+
 
       await detenerCamara();
+
+
+      if (
+        NONCE &&
+        existeVentanaOrigen()
+      ) {
+
+        cerrarVentanaLector();
+
+        return;
+      }
+
 
       if (
         returnUrlValida(
           RETURN_URL
         )
       ) {
+
         window.location.replace(
           RETURN_URL
         );
@@ -497,79 +1237,266 @@
         return;
       }
 
-      history.back();
+
+      try {
+
+        history.back();
+
+      }
+
+      catch (error) {
+
+        FINALIZANDO =
+          false;
+
+      }
+
     }
 
 
-    function returnUrlValida(valor) {
+    // ======================================================
+    // CERRAR VENTANA DEL LECTOR
+    // ======================================================
+
+    function cerrarVentanaLector() {
+
       try {
+
+        window.close();
+
+      }
+
+      catch (error) {}
+
+
+      /*
+       * Si el navegador impide window.close(),
+       * intentamos regresar al historial.
+       */
+
+      setTimeout(
+        function() {
+
+          try {
+
+            if (
+              !window.closed
+            ) {
+
+              history.back();
+
+            }
+
+          }
+
+          catch (error) {}
+
+        },
+        180
+      );
+
+    }
+
+
+    // ======================================================
+    // VALIDAR RETURN URL
+    //
+    // Conservamos compatibilidad con el mecanismo anterior.
+    // Solamente se permiten URLs HTTPS de Apps Script.
+    // ======================================================
+
+    function returnUrlValida(
+      valor
+    ) {
+
+      if (!valor) {
+
+        return false;
+      }
+
+
+      try {
+
         const url =
           new URL(
             valor
           );
 
+
+        if (
+          url.protocol !==
+          'https:'
+        ) {
+
+          return false;
+        }
+
+
         return (
-          url.protocol === 'https:' &&
-          (
-            url.hostname ===
-              'script.google.com' ||
-            url.hostname.endsWith(
-              '.script.google.com'
-            )
+
+          url.hostname ===
+            'script.google.com' ||
+
+          url.hostname.endsWith(
+            '.script.google.com'
           )
+
         );
 
-      } catch (error) {
+      }
+
+      catch (error) {
+
         return false;
       }
+
     }
 
 
+    // ======================================================
+    // DETENER CÁMARA
+    // ======================================================
+
     async function detenerCamara() {
+
       try {
+
         if (
           ESCANER &&
           ESCANER.isScanning
         ) {
+
           await ESCANER.stop();
+
         }
-      } catch (error) {
-        // No crítico.
+
       }
+
+      catch (error) {
+
+        /*
+         * No crítico.
+         */
+
+      }
+
 
       try {
-        if (ESCANER) {
+
+        if (
+          ESCANER
+        ) {
+
           await ESCANER.clear();
+
         }
-      } catch (error) {
-        // No crítico.
+
       }
 
-      INICIADO = false;
-      ESCANER = null;
+      catch (error) {
+
+        /*
+         * No crítico.
+         */
+
+      }
+
+
+      INICIADO =
+        false;
+
+
+      ESCANER =
+        null;
+
     }
 
+
+    // ======================================================
+    // BOTÓN DE CÁMARA
+    // ======================================================
+
+    function bloquearBotonCamara(
+      bloquear
+    ) {
+
+      const boton =
+        document.getElementById(
+          'btnIniciar'
+        );
+
+
+      if (
+        boton
+      ) {
+
+        boton.disabled =
+          Boolean(
+            bloquear
+          );
+
+      }
+
+    }
+
+
+    // ======================================================
+    // ESTADO
+    // ======================================================
 
     function mostrarEstado(
       mensaje,
       tipo
     ) {
+
       const elemento =
         document.getElementById(
           'estado'
         );
 
+
+      if (!elemento) {
+
+        return;
+      }
+
+
       elemento.className =
         'estado' +
         (
           tipo
-            ? ' ' + tipo
+            ? ' ' +
+              tipo
             : ''
         );
 
+
       elemento.textContent =
         mensaje || '';
+
     }
+
+
+    // ======================================================
+    // LIMPIEZA AL CERRAR
+    // ======================================================
+
+    window.addEventListener(
+      'pagehide',
+      function() {
+
+        if (
+          ESCANER
+        ) {
+
+          detenerCamara();
+
+        }
+
+      }
+    );
+
   </script>
+
 </body>
 </html>
