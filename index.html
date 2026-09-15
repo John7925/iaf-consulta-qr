@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- iaf-consulta-qr v0.3 — Cámara + imagen + compatibilidad HEIC/HEIF móvil -->
+<!-- iaf-consulta-qr v0.4 — HEIC moderno + foto directa + diagnóstico móvil -->
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -212,10 +212,14 @@
     .imagen-acciones{
       padding:12px;
       display:grid;
-      grid-template-columns:1fr 1fr;
+      grid-template-columns:repeat(3,1fr);
       gap:8px;
       background:#FFF;
       border-top:1px solid var(--borde);
+    }
+
+    .camara-acciones{
+      grid-template-columns:1fr 1fr;
     }
 
     .btn{
@@ -250,7 +254,8 @@
       border:1px solid #CDB58F;
     }
 
-    #archivoQr{
+    #archivoQr,
+    #archivoQrCamara{
       display:none;
     }
 
@@ -453,7 +458,7 @@
   ></script>
 
   <script
-    src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"
+    src="https://cdn.jsdelivr.net/npm/heic-to@1.5.2/dist/iife/heic-to.js"
   ></script>
 </head>
 
@@ -556,6 +561,13 @@
             id="nombreImagen"
             class="imagen-nombre"
           ></div>
+
+
+          <div
+            id="diagnosticoImagen"
+            class="imagen-nombre"
+            style="font-weight:600;color:#687B82;"
+          ></div>
         </div>
 
         <div class="imagen-acciones">
@@ -565,6 +577,14 @@
             class="btn btn-imagen"
           >
             SELECCIONAR IMAGEN
+          </button>
+
+          <button
+            id="btnTomarFoto"
+            type="button"
+            class="btn btn-principal"
+          >
+            TOMAR FOTO
           </button>
 
           <button
@@ -582,6 +602,14 @@
         id="archivoQr"
         type="file"
         accept="image/*,.heic,.heif"
+      >
+
+
+      <input
+        id="archivoQrCamara"
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/*"
+        capture="environment"
       >
 
       <div
@@ -630,6 +658,7 @@
     let FINALIZANDO = false;
     let PROCESANDO_IMAGEN = false;
     let OPENCV_PROMESA = null;
+    let DIAGNOSTICO_IMAGEN = [];
 
 
     // ======================================================
@@ -745,7 +774,27 @@
 
         document
           .getElementById(
+            'btnTomarFoto'
+          )
+          .addEventListener(
+            'click',
+            tomarFoto
+          );
+
+
+        document
+          .getElementById(
             'archivoQr'
+          )
+          .addEventListener(
+            'change',
+            procesarImagenSeleccionada
+          );
+
+
+        document
+          .getElementById(
+            'archivoQrCamara'
           )
           .addEventListener(
             'change',
@@ -1188,6 +1237,29 @@
     }
 
 
+    function tomarFoto() {
+
+      if (
+        PROCESANDO_IMAGEN ||
+        FINALIZANDO
+      ) {
+        return;
+      }
+
+
+      const input =
+        document.getElementById(
+          'archivoQrCamara'
+        );
+
+
+      input.value =
+        '';
+
+      input.click();
+    }
+
+
     async function procesarImagenSeleccionada(
       evento
     ) {
@@ -1224,6 +1296,9 @@
         true;
 
 
+      DIAGNOSTICO_IMAGEN = [];
+
+
       bloquearControles(
         true
       );
@@ -1238,11 +1313,37 @@
         );
 
 
+      const diagnostico =
+        document.getElementById(
+          'diagnosticoImagen'
+        );
+
+
       if (nombre) {
 
         nombre.textContent =
           archivo.name ||
           'Imagen seleccionada';
+      }
+
+
+      if (diagnostico) {
+
+        diagnostico.textContent =
+          'Tipo: ' +
+          (
+            archivo.type ||
+            'sin MIME'
+          ) +
+          ' · ' +
+          Math.max(
+            1,
+            Math.round(
+              archivo.size /
+              1024
+            )
+          ) +
+          ' KB';
       }
 
 
@@ -1289,7 +1390,7 @@
       catch (error) {
 
         mostrarEstado(
-          'No fue posible detectar un QR legible en esta imagen. Intenta con la fotografía original, procura que el QR ocupe una parte mayor de la imagen o utiliza la cámara.',
+          'No fue posible detectar un QR legible. Revisa el diagnóstico mostrado debajo del nombre del archivo. Si es HEIC y no aparece “Convertido a JPEG”, usa TOMAR FOTO para crear una imagen procesable directamente desde el navegador.',
           'error'
         );
       }
@@ -1363,7 +1464,7 @@
     }
 
 
-    function esArchivoHeic(
+    async function archivoEsHeic(
       archivo
     ) {
 
@@ -1388,18 +1489,38 @@
           .toLowerCase();
 
 
-      return (
+      if (
         tipo === 'image/heic' ||
         tipo === 'image/heif' ||
         tipo === 'image/heic-sequence' ||
         tipo === 'image/heif-sequence' ||
-        /\.heic$/i.test(
-          nombre
-        ) ||
-        /\.heif$/i.test(
+        /\.(heic|heif)$/i.test(
           nombre
         )
-      );
+      ) {
+        return true;
+      }
+
+
+      try {
+
+        if (
+          window.HeicTo &&
+          typeof window.HeicTo.isHeic ===
+            'function'
+        ) {
+
+          return Boolean(
+            await window.HeicTo.isHeic(
+              archivo
+            )
+          );
+        }
+      }
+      catch (error) {}
+
+
+      return false;
     }
 
 
@@ -1407,52 +1528,59 @@
       archivo
     ) {
 
-      if (
-        !esArchivoHeic(
+      const esHeic =
+        await archivoEsHeic(
           archivo
-        )
-      ) {
+        );
+
+
+      if (!esHeic) {
+
+        DIAGNOSTICO_IMAGEN.push(
+          'Formato web directo'
+        );
+
+        actualizarDiagnosticoImagen();
 
         return archivo;
       }
 
 
+      DIAGNOSTICO_IMAGEN.push(
+        'HEIC/HEIF detectado'
+      );
+
+      actualizarDiagnosticoImagen();
+
+
       mostrarEstado(
-        'La fotografía está en formato HEIC. Convirtiendo localmente a JPEG para poder analizar el QR…',
+        'Fotografía HEIC/HEIF detectada. Convirtiendo localmente a JPEG con el decodificador móvil…',
         'pendiente'
       );
 
 
       if (
-        typeof window.heic2any !==
-          'function' &&
-        typeof heic2any !==
+        !window.HeicTo ||
+        typeof window.HeicTo !==
           'function'
       ) {
 
         throw new Error(
-          'No se pudo cargar el convertidor HEIC.'
+          'El decodificador HEIC moderno no pudo cargarse.'
         );
       }
 
 
-      const convertir =
-        typeof window.heic2any ===
-          'function'
-          ? window.heic2any
-          : heic2any;
-
-
       let convertido =
-        await convertir({
+        await window.HeicTo({
           blob:
             archivo,
 
-          toType:
+          type:
             'image/jpeg',
 
           quality:
-            0.95
+            0.92
         });
 
 
@@ -1467,14 +1595,19 @@
       }
 
 
-      if (
-        !convertido
-      ) {
+      if (!convertido) {
 
         throw new Error(
-          'No fue posible convertir la fotografía HEIC.'
+          'La conversión HEIC no produjo una imagen.'
         );
       }
+
+
+      DIAGNOSTICO_IMAGEN.push(
+        'Convertido a JPEG'
+      );
+
+      actualizarDiagnosticoImagen();
 
 
       const nombreOriginal =
@@ -1513,10 +1646,49 @@
       }
       catch (error) {
 
-        convertido.name =
-          nombreJpeg;
-
         return convertido;
+      }
+    }
+
+
+    function actualizarDiagnosticoImagen() {
+
+      const diagnostico =
+        document.getElementById(
+          'diagnosticoImagen'
+        );
+
+
+      if (!diagnostico) {
+        return;
+      }
+
+
+      const anterior =
+        diagnostico.textContent
+          ? diagnostico.textContent
+          : '';
+
+
+      const pasos =
+        DIAGNOSTICO_IMAGEN
+          .join(
+            ' → '
+          );
+
+
+      if (pasos) {
+
+        diagnostico.textContent =
+          (
+            anterior &&
+            !anterior.includes(
+              ' → '
+            )
+              ? anterior + ' · '
+              : ''
+          ) +
+          pasos;
       }
     }
 
@@ -1526,10 +1698,30 @@
     ) {
 
       const intentos = [
-        detectarQrBarcodeDetector,
-        detectarQrHtml5Qrcode,
-        detectarQrJsQrAvanzado,
-        detectarQrOpenCvRescate
+        {
+          nombre:
+            'Detector nativo',
+          funcion:
+            detectarQrBarcodeDetector
+        },
+        {
+          nombre:
+            'ZXing',
+          funcion:
+            detectarQrHtml5Qrcode
+        },
+        {
+          nombre:
+            'jsQR',
+          funcion:
+            detectarQrJsQrAvanzado
+        },
+        {
+          nombre:
+            'OpenCV',
+          funcion:
+            detectarQrOpenCvRescate
+        }
       ];
 
 
@@ -1545,8 +1737,15 @@
 
         try {
 
+          DIAGNOSTICO_IMAGEN.push(
+            intentos[i].nombre
+          );
+
+          actualizarDiagnosticoImagen();
+
+
           const texto =
-            await intentos[i](
+            await intentos[i].funcion(
               archivo
             );
 
@@ -1557,6 +1756,12 @@
               texto
             ).trim()
           ) {
+
+            DIAGNOSTICO_IMAGEN.push(
+              'QR encontrado'
+            );
+
+            actualizarDiagnosticoImagen();
 
             return String(
               texto
@@ -3605,7 +3810,8 @@
         'btnModoCamara',
         'btnModoImagen',
         'btnIniciarCamara',
-        'btnSeleccionarImagen'
+        'btnSeleccionarImagen',
+        'btnTomarFoto'
       ]
         .forEach(
           function(id) {
